@@ -29,8 +29,7 @@ TOP_K_RESULTS = int(os.getenv("TOP_K_RESULTS", "3"))
 
 def validate_config():
     """
-    Startup pe check karo — sab settings sahi hain ya nahi.
-    Production mein yeh hamesha hona chahiye.
+    Config validate at the start of the application for missing or invalid settings
     """
     errors = []
 

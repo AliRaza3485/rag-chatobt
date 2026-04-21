@@ -3,56 +3,62 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-
 class QuestionRequest(BaseModel):
     """
-    User ka request — API ko yeh milega.
+    User's request means api will get this.
+    
     """
     question: str = Field(
         ...,
         min_length=1,
         max_length=1000,
-        description="User ka question"
+        description="User's question"
     )
     session_id: Optional[str] = Field(
         default="default",
-        description="User ka unique session ID"
+        description="User's unique session ID"
     )
-
 
 class AnswerResponse(BaseModel):
     """
-    API ka response — yeh wapas jayega.
+    The response of api call - will be sent back to the user.
+    
     """
-    answer: str = Field(description="Bot ka jawab")
+    answer: str = Field(description="Bot's answer")
     sources: list[str] = Field(
         default=[],
-        description="Jinse answer aaya"
+        description="Sources from which the answer was derived"
     )
     session_id: str = Field(description="Session ID")
-
 
 class HealthResponse(BaseModel):
     """
     Server health check response.
+    
     """
-    status: str
-    message: str
-
+    status: str = Field(description="Health status, e.g., 'healthy'")
+    message: str = Field(description="Additional info about the health status")
 
 class ClearHistoryRequest(BaseModel):
     """
-    History clear karne ka request.
+    Request to clear chat history for a session.
+    
     """
     session_id: Optional[str] = Field(
         default="default",
-        description="Kis session ki history clear karni hai"
+        description="The session ID for which the chat history should be cleared"
     )
 
-
+# class ClearHistoryResponse(BaseModel):
+#     """
+#     History clear hone ka confirmation.
+#     """
+#     message: str
+#     session_id: str
 class ClearHistoryResponse(BaseModel):
     """
-    History clear hone ka confirmation.
+    The confirmation response after clearing chat history.
+    
     """
-    message: str
-    session_id: str
+    message: str = Field(description="Confirmation message about history clearance")
+    session_id: str = Field(description="The session ID for which the history was cleared")

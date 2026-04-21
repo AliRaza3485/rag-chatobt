@@ -1,10 +1,11 @@
 # api.py
 
+from genericpath import exists
+
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
-
 from src.config import validate_config, DATA_FOLDER, TOP_K_RESULTS
 from src.document_loader import load_all_and_chunk
 from src.vector_store import should_rebuild, create_vector_store, load_vector_store, get_retriever
@@ -16,50 +17,42 @@ from src.schemas import (
     ClearHistoryRequest,
     ClearHistoryResponse,
 )
-
 # Global variables — sirf ek baar initialize honge
 rag_chain = None
 retriever = None
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Server start hone pe yeh run hoga.
-    RAG system initialize karo — sirf ek baar.
-    Yeh 'lifespan' pattern hai — industry standard.
-    """
+       It will run after the server starts.
+       It will initilize the rag only for once.
+       This is 'lifespan' pattern - Industry standard.
+    """  
     global rag_chain, retriever
 
-    print("Server starting — RAG system initialize ho raha hai...")
-
-    # Config validate karo
+    print("Server starting  RAG system is getting initialized...")
+    # Config the Validate
     validate_config()
-
-    # Vector store load ya banao
+    # Load or create the vector store
     if should_rebuild(DATA_FOLDER):
         chunks = load_all_and_chunk(DATA_FOLDER)
         vector_store = create_vector_store(chunks)
     else:
         vector_store = load_vector_store()
-
-    # Retriever aur chain banao
-    retriever = get_retriever(vector_store, k=TOP_K_RESULTS)
-    rag_chain = create_rag_chain(retriever)
-
-    print("RAG system ready!")
-
-    # Server chalta rahe
+    # Create the retriever and RAG chain
+    retriever = get_retriever(vector_store, k=TOP_K_RESULTS)   
+    rag_chain = create_rag_chain(retriever) 
+    print("RAG system is ready!")
+    # Server will keep running 
     yield
+    # Cleanup when server is shutting down
+    print("Server is shutting down...")
 
-    # Server band hone pe cleanup
-    print("Server shutting down...")
 
-
-# FastAPI app banao
+# # FastAPI app banao
 app = FastAPI(
     title="RAG Chatbot API",
-    description="Industry level RAG chatbot — LangChain + ChromaDB + Groq",
+    description="Industry level RAG chatbot  Langchain + ChromaDB + Groq",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -67,56 +60,52 @@ app = FastAPI(
 # CORS middleware add karo
 # Yeh allow karta hai ke frontend (React etc) is API ko call kar sake
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+     CORSMiddleware,
+     allow_origins=["*"],
+     allow_credentials=True,
+     allow_methods=["*"],
+     allow_headers=["*"],
+    )
 
 @app.get(
-    "/health",
-    response_model=HealthResponse,
-    tags=["System"],
+        "/health",
+        response_model=HealthResponse,
+        tags=["System"],
 )
 async def health_check():
     """
-    Server chal raha hai ya nahi — check karo.
-    Production mein monitoring tools yeh endpoint check karte hain.
+    Check weather the server is up and RAG system is initialized.
     """
     return HealthResponse(
-        status="healthy",
-        message="RAG Chatbot API is running!"
+        status="Healthy" if rag_chain is not None else "Initializing",
+        message="RAG Chatbot API is running!" if rag_chain is not None else "RAG system is still initializing, please wait..."
     )
 
-
 @app.post(
-    "/chat",
-    response_model=AnswerResponse,
-    tags=["Chat"],
-    status_code=status.HTTP_200_OK,
+        "/chat",
+        response_model=AnswerResponse,
+        tags=["Chat"],
+        status_code=status.HTTP_200_OK,
 )
+
 async def chat(request: QuestionRequest):
     """
     Main chat endpoint.
-    Question bhejo — answer + sources wapas aao.
+    Send question and get answer + sources back.
     """
-    # RAG system ready hai ya nahi check karo
+    # Check if RAG system is ready or not
     if rag_chain is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="RAG system abhi initialize nahi hua — thoda wait karo",
+            detail="RAG system is still initializing - please wait for a moment",
         )
-
     try:
-        # Question puchho
+        # Ask the question to RAG chain
         result = ask_question(
             rag_chain,
             request.question,
             request.session_id,
         )
-
         return AnswerResponse(
             answer=result["answer"],
             sources=result["sources"],
@@ -126,27 +115,24 @@ async def chat(request: QuestionRequest):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error: {str(e)}",
+            detail=f"An error occurred while processing your request: {str(e)}",
         )
 
-
 @app.post(
-    "/clear-history",
-    response_model=ClearHistoryResponse,
-    tags=["Chat"],
+        "/clear-history",
+        response_model=ClearHistoryResponse,
+        tags=["Chat"],
 )
 async def clear_chat_history(request: ClearHistoryRequest):
     """
-    Session history clear karo.
-    Nai conversation shuru karne ke liye.
+    Clear the chat history for a session.
+
     """
     clear_history(request.session_id)
-
     return ClearHistoryResponse(
-        message="History clear ho gayi!",
+        message="History is cleared ",
         session_id=request.session_id,
     )
-
 
 @app.get(
     "/sessions/{session_id}/exists",
@@ -163,3 +149,4 @@ async def check_session(session_id: str):
         "session_id": session_id,
         "exists": exists,
     }
+
