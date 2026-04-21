@@ -1,0 +1,19 @@
+Artificial Intelligence (AI) is the simulation of human intelligence in machines. It was founded as an academic discipline in 1956. AI research has experienced several waves of optimism followed by disappointment.
+
+Machine Learning is a subset of AI that enables systems to learn from data without being explicitly programmed. It focuses on developing algorithms that can access data and use it to learn for themselves.
+
+Deep Learning uses neural networks with many layers to analyze data. It has revolutionized fields like computer vision and natural language processing. Deep learning models require large amounts of data and computational power.
+
+Natural Language Processing (NLP) allows machines to understand human language. It combines computational linguistics with statistical and deep learning models. NLP powers applications like chatbots, translation, and sentiment analysis.
+
+Large Language Models (LLMs) are trained on massive amounts of text data. They can generate human-like text, answer questions, and perform many language tasks. Examples include GPT-4, Claude, and Llama.
+
+RAG stands for Retrieval Augmented Generation. It is a technique that combines document retrieval with language model generation. RAG allows language models to access external knowledge beyond their training data.
+
+Vector databases store embeddings for efficient similarity search. They are optimized for storing and querying high-dimensional vectors. Popular vector databases include ChromaDB, Pinecone, and Weaviate.
+
+ChromaDB is an open source vector database used in AI applications. It runs locally and does not require any external services. ChromaDB is perfect for building RAG applications on your local machine.
+
+LangChain is a framework for building applications with language models. It provides tools for document loading, text splitting, embeddings, and chains. LangChain makes it easy to build complex AI pipelines.
+
+Embeddings are numerical representations of text in vector space. Similar texts have similar embeddings. They allow computers to understand semantic meaning of text mathematically.
